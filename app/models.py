@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Table
 from sqlalchemy.orm import relationship
 from app.database.config import Base
 from sqlalchemy.sql.expression import text
@@ -32,6 +32,10 @@ class Dog(Base):
 
     owner = relationship("User")
 
+activity_tags = Table('activity_tags', Base.metadata,
+    Column('activity_id', Integer, ForeignKey('activities.id', ondelete='CASCADE'), nullable=False),
+    Column('tag_id', Integer, ForeignKey('tags.id', ondelete='CASCADE'), nullable=False)
+)
 
 class Activity(Base):
     __tablename__ = "activities"
@@ -42,3 +46,12 @@ class Activity(Base):
     dog_id = Column(Integer, ForeignKey('dogs.id', ondelete='CASCADE'), nullable=False)
 
     dog = relationship("Dog")
+    tags = relationship('Tag', secondary=activity_tags, back_populates='activities')
+
+class Tag(Base):
+    __tablename__ = "tags"
+
+    id = Column(Integer, primary_key=True, nullable=False, index=True)
+    name = Column(String, nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    activities = relationship('Activity', secondary=activity_tags, back_populates='tags')

@@ -40,12 +40,35 @@ async def create_activity(activity: CreateActivity, db: Session = Depends(get_db
     if dog.owner_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Unauthorized')
 
-    new_activity = models.Activity(**activity.model_dump())
+    #create activity
+    new_activity = models.Activity(
+        description = activity.description,
+        dog_id = activity.dog_id
+    )
     db.add(new_activity)
     db.commit()
     db.refresh(new_activity)
 
-    return new_activity
+    created_activity = db.query(models.Activity).filter(models.Activity.id == new_activity.id).first()
+    #extract tags from activity request
+    for tag in activity.tags:
+        #check if tag exist in db
+        tag_check = db.query(models.Tag).filter(models.Tag.name == tag.name).first()
+        if tag_check is None:
+            #if no, create new tag
+            new_tag = models.Tag(name=tag.name)
+            db.add(new_tag)
+            #add tag to activity
+            created_activity.tags.append(new_tag)
+        else:
+        #else, select tag from db
+            created_activity.tags.append(tag_check)
+        
+        
+    db.commit()
+    db.refresh(created_activity)
+
+    return created_activity
 
 @router.put('/{id}', status_code=status.HTTP_202_ACCEPTED, response_model=ResponseActivity)
 async def update_activity(id: int, activity: CreateActivity, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
@@ -60,10 +83,33 @@ async def update_activity(id: int, activity: CreateActivity, db: Session = Depen
     #update activity
     db.query(models.Activity).\
         filter(models.Activity.id == activity_update.first().id).\
-        update(activity.model_dump())
+        update({
+            models.Activity.description: activity.description,
+            models.Activity.dog_id: activity.dog_id
+        })
     db.commit()
     db.refresh(activity_update.first())
-    return activity_update.first()
+
+    updated_activity = db.query(models.Activity).filter(models.Activity.id == activity_update.first().id).first()
+    # detach all tags from activity
+    updated_activity.tags.clear()
+    
+    # extract tags from activity request
+    for tag in activity.tags:
+        #check if tag exist in db
+        tag_check = db.query(models.Tag).filter(models.Tag.name == tag.name).first()
+        if tag_check is None:
+            #if no, create new tag
+            new_tag = models.Tag(name=tag.name)
+            db.add(new_tag)
+            #add tag to activity
+            updated_activity.tags.append(new_tag)
+        else:
+        #else, select tag from db
+            updated_activity.tags.append(tag_check)
+    db.commit()
+            
+    return updated_activity
 
 @router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_activity(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
@@ -74,7 +120,7 @@ async def delete_activity(id: int, db: Session = Depends(get_db), current_user: 
     #check if activity exists
     if not activity_delete.first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Activity not found')
-    
+
     #delete activity
     db.query(models.Activity).\
         filter(models.Activity.id == activity_delete.first().id).\
