@@ -31,3 +31,14 @@ class Dog(Base):
     owner_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
 
     owner = relationship("User")
+
+
+class Activity(Base):
+    __tablename__ = "activities"
+
+    id = Column(Integer, primary_key=True, nullable=False, index=True)
+    description = Column(String, nullable=True)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    dog_id = Column(Integer, ForeignKey('dogs.id', ondelete='CASCADE'), nullable=False)
+
+    dog = relationship("Dog")

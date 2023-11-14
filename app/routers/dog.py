@@ -4,6 +4,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from app.database.config import get_db
 from app.utils import oauth2
+from sqlalchemy import or_
 from app import models
 
 router = APIRouter(
@@ -14,7 +15,12 @@ router = APIRouter(
 @router.get("/", response_model=List[ResponseDog])
 async def get_dogs(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), limit: int = 15, skip: int = 0, search: Optional[str] = ""):
     #only can see their own dogs
-    dogs = db.query(models.Dog).filter(models.Dog.name.contains(search), models.Dog.owner_id == current_user.id).limit(limit).offset(skip).all()
+    dogs = db.query(models.Dog).filter(
+        or_(
+            models.Dog.name.contains(search.lower()),
+            models.Dog.breed.contains(search.lower()),
+        ), 
+        models.Dog.owner_id == current_user.id).limit(limit).offset(skip).all()
     return dogs
 
 @router.get("/{id}", response_model=ResponseDog)
@@ -26,6 +32,11 @@ async def get_dog(id: int, db: Session = Depends(get_db), current_user: int = De
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=ResponseDog)
 async def create_dog(dog: Dog, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+    #lowercase the all
+    dog.name = dog.name.lower()
+    dog.breed = dog.breed.lower()
+    dog.gender = dog.gender.lower()
+
     new_dog = models.Dog(owner_id=current_user.id, **dog.model_dump())
     db.add(new_dog)
     db.commit()
