@@ -5,11 +5,18 @@ from app import models
 from app.utils import oauth2
 from app.utils.crypt import hash
 from app.database.config import get_db
+from typing import List
 
 router = APIRouter(
     tags=["Users"],
     prefix="/users"
 )
+
+@router.get("/", response_model=List[ResponseUser])
+async def get_users(db: Session = Depends(get_db)):
+    #get all users
+    users = db.query(models.User).all()
+    return users
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=ResponseUser)
 async def create_user(user: CreateUser, db: Session = Depends(get_db)):

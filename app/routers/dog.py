@@ -64,5 +64,5 @@ async def delete_dog(id: int, db: Session = Depends(get_db), current_user: int =
     
     dog_delete.delete(synchronize_session=False)
     db.commit()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return Response(status_code=status.HTTP_204_NO_CONTENT, content="Dog deleted")
 

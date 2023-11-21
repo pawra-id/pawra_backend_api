@@ -11,6 +11,8 @@ class User(Base):
     username = Column(String, unique=True, nullable=False)
     email = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
+    summary = Column(String, nullable=True)
+    address = Column(String, nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
 
 class Dog(Base):
@@ -55,3 +57,14 @@ class Tag(Base):
     name = Column(String, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     activities = relationship('Activity', secondary=activity_tags, back_populates='tags')
+
+class Vet(Base):
+    __tablename__ = "vets"
+
+    id = Column(Integer, primary_key=True, nullable=False, index=True)
+    name = Column(String, nullable=False)
+    address = Column(String, nullable=False)
+    clinic_name = Column(String, nullable=False)
+    phone = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
