@@ -1,11 +1,12 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
+from typing import Optional
 
 class User(BaseModel):
     username: str
     email: EmailStr
-    summary: str = None
-    address: str = None
+    summary: Optional[str] = None
+    address: Optional[str] = None
     
 class CreateUser(User):
     password: str
