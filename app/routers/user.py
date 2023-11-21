@@ -13,7 +13,7 @@ router = APIRouter(
 )
 
 @router.get("/", response_model=List[ResponseUser])
-async def get_users(db: Session = Depends(get_db)):
+async def get_users(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     #get all users
     users = db.query(models.User).all()
     return users
@@ -34,7 +34,7 @@ async def create_user(user: CreateUser, db: Session = Depends(get_db)):
     return new_user
 
 @router.get("/{id}", response_model=ResponseUser)
-async def get_user(id: int, db: Session = Depends(get_db)):
+async def get_user(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     #get user by id
     user = db.query(models.User).filter(models.User.id == id).first()
     #if user doesnt exist

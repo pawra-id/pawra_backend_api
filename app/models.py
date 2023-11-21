@@ -39,6 +39,11 @@ activity_tags = Table('activity_tags', Base.metadata,
     Column('tag_id', Integer, ForeignKey('tags.id', ondelete='CASCADE'), nullable=False)
 )
 
+activity_analysis = Table('activity_analysis', Base.metadata,
+    Column('analysis_id', Integer, ForeignKey('analysis.id', ondelete='CASCADE'), nullable=False),
+    Column('activity_id', Integer, ForeignKey('activities.id', ondelete='CASCADE'), nullable=False)
+)
+
 class Activity(Base):
     __tablename__ = "activities"
 
@@ -49,6 +54,7 @@ class Activity(Base):
 
     dog = relationship("Dog")
     tags = relationship('Tag', secondary=activity_tags, back_populates='activities')
+    analysis = relationship('Analysis', secondary=activity_analysis, back_populates='activities')
 
 class Tag(Base):
     __tablename__ = "tags"
@@ -80,3 +86,18 @@ class Blog(Base):
     author_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
 
     author = relationship("User")
+
+
+class Analysis(Base):
+    __tablename__ = "analysis"
+
+    id = Column(Integer, primary_key=True, nullable=False, index=True)
+    description = Column(String, nullable=False)
+    prediction = Column(String, nullable=False)
+    is_shared = Column(Boolean, nullable=False, server_default='FALSE')
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    dog_id = Column(Integer, ForeignKey('dogs.id', ondelete='CASCADE'), nullable=False)
+
+    dog = relationship("Dog")
+    activities = relationship('Activity', secondary=activity_analysis, back_populates='analysis')
+
