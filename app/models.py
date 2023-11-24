@@ -13,7 +13,9 @@ class User(Base):
     password = Column(String, nullable=False)
     summary = Column(String, nullable=True)
     address = Column(String, nullable=True)
+    image = Column(String, nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    updated_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
 
 class Dog(Base):
     __tablename__ = "dogs"
@@ -30,6 +32,7 @@ class Dog(Base):
     description = Column(String, nullable=True)
     image = Column(String, nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    updated_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     owner_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
 
     owner = relationship("User")
@@ -50,6 +53,7 @@ class Activity(Base):
     id = Column(Integer, primary_key=True, nullable=False, index=True)
     description = Column(String, nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    updated_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     dog_id = Column(Integer, ForeignKey('dogs.id', ondelete='CASCADE'), nullable=False)
 
     dog = relationship("Dog")
@@ -62,6 +66,7 @@ class Tag(Base):
     id = Column(Integer, primary_key=True, nullable=False, index=True)
     name = Column(String, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    updated_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     activities = relationship('Activity', secondary=activity_tags, back_populates='tags')
 
 class Vet(Base):
@@ -74,6 +79,7 @@ class Vet(Base):
     phone = Column(String, nullable=False)
     description = Column(String, nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    updated_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
 
 class Blog(Base):
     __tablename__ = "blogs"
@@ -83,6 +89,7 @@ class Blog(Base):
     content = Column(Text, nullable=False)
     image = Column(String, nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    updated_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     author_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
 
     author = relationship("User")
@@ -96,6 +103,7 @@ class Analysis(Base):
     prediction = Column(String, nullable=False)
     is_shared = Column(Boolean, nullable=False, server_default='FALSE')
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    updated_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     dog_id = Column(Integer, ForeignKey('dogs.id', ondelete='CASCADE'), nullable=False)
 
     dog = relationship("Dog")

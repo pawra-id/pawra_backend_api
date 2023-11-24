@@ -11,6 +11,7 @@ class Blog(BaseModel):
 class ResponseBlog(Blog):
     id: int
     created_at: datetime
+    updated_at: datetime
     author: ResponseUser
 
     class Config:

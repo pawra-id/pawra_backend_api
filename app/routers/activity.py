@@ -5,6 +5,7 @@ from app.database.config import get_db
 from sqlalchemy.orm import Session
 from app import models
 from app.utils import oauth2
+from datetime import datetime
 
 router = APIRouter(
     prefix="/activities",
@@ -91,6 +92,9 @@ async def update_activity(id: int, activity: CreateActivity, db: Session = Depen
     db.refresh(activity_update.first())
 
     updated_activity = db.query(models.Activity).filter(models.Activity.id == activity_update.first().id).first()
+    update_activity.update({
+        'updated_at': datetime.now()
+    })
     # detach all tags from activity
     updated_activity.tags.clear()
     

@@ -6,6 +6,7 @@ from app.database.config import get_db
 from app.utils import oauth2
 from sqlalchemy import or_
 from app import models
+from datetime import datetime
 
 router = APIRouter(
     prefix="/dogs",
@@ -51,6 +52,9 @@ async def update_dog(id: int, dog: Dog, db: Session = Depends(get_db), current_u
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Dog doesnt exist")
     
     dog_update.update(dog.model_dump())
+    dog_update.update({
+        'updated_at': datetime.now()
+    })
     db.commit()
     db.refresh(dog_update.first())
     return dog_update.first()

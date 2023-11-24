@@ -5,6 +5,7 @@ from app.database.config import get_db
 from app import models
 from typing import List
 from app.utils import oauth2
+from datetime import datetime
 
 router = APIRouter(
     tags=["Vets"],
@@ -52,6 +53,9 @@ async def update_vet(id: int, vet: Vet, db: Session = Depends(get_db), current_u
     
     #update vet
     vet_update.update(vet.model_dump())
+    vet_update.update({
+        'updated_at': datetime.now()
+    })
     db.commit()
     db.refresh(vet_update.first())
 

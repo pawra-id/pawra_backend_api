@@ -6,6 +6,7 @@ from app.utils import oauth2
 from app.utils.crypt import hash
 from app.database.config import get_db
 from typing import List
+from datetime import datetime
 
 router = APIRouter(
     tags=["Users"],
@@ -53,6 +54,9 @@ async def update_user(id: int, user: CreateUser, db: Session = Depends(get_db), 
     
     #update user
     user_update.update(user.model_dump())
+    user_update.update({
+        'updated_at': datetime.now()
+    })
     db.commit()
     db.refresh(user_update.first())
 

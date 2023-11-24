@@ -18,6 +18,7 @@ class Dog(BaseModel):
 class ResponseDog(Dog):
     id: int
     created_at: datetime
+    updated_at: datetime
     owner: ResponseUser
 
     class Config:

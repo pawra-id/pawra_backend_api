@@ -14,6 +14,7 @@ class CreateActivity(Activity):
 class ResponseActivity(Activity):
     id: int
     created_at: datetime
+    updated_at: datetime
     dog: ResponseDog
     tags: List[ResponseTag]
 

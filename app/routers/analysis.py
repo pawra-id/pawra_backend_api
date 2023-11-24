@@ -146,6 +146,7 @@ async def unshare_analysis(id: int, db: Session = Depends(get_db), current_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Analysis not found")
     
     analysis.is_shared = False
+    analysis.updated_at = datetime.now()
     db.commit()
 
     return {"message": "Analysis unshared"}

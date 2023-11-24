@@ -16,6 +16,7 @@ class CreateAnalysis(BaseModel):
 class ResponseAnalysis(Analysis):
     id: int
     created_at: datetime
+    updated_at: datetime
     activities: List[ResponseActivity]
 
     class Config:

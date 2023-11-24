@@ -6,6 +6,7 @@ from app.database.config import get_db
 from app.utils import oauth2
 from sqlalchemy import or_
 from app import models
+from datetime import datetime
 
 router = APIRouter(
     prefix="/blogs",
@@ -46,6 +47,9 @@ async def update_blog(id: int, blog: Blog, db: Session = Depends(get_db), curren
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Blog doesnt exist")
     
     blog_update.update(blog.model_dump())
+    blog_update.update({
+        'updated_at': datetime.now()
+    })
     db.commit()
     db.refresh(blog_update.first())
     return blog_update.first()
