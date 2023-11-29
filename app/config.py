@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     secret_key: str
     algorithm: str
     access_token_expire_minutes: int
+    google_application_credentials: str
+    bucket_name: str
 
     class Config:
         env_file = ".env"

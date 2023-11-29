@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Response, File, UploadFile
 from app.schemes.blog import ResponseBlog, Blog
 from typing import List, Optional
 from sqlalchemy.orm import Session
@@ -6,6 +6,7 @@ from app.database.config import get_db
 from app.utils import oauth2
 from sqlalchemy import or_
 from app import models
+from app.utils.gcs import GCStorage
 from datetime import datetime
 
 router = APIRouter(
@@ -71,3 +72,10 @@ async def get_all_blogs(db: Session = Depends(get_db), limit: int = 15, skip: in
             models.Blog.content.contains(search.lower()),
         )).limit(limit).offset(skip).all()
     return blogs
+
+
+#upload blog image
+@router.post('/image', status_code=status.HTTP_200_OK)
+async def upload_vet_image(file: UploadFile = File(), current_user: int = Depends(oauth2.get_current_user)):
+    url  = await GCStorage().upload_file(file, 'blog_picture')
+    return url

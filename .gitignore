@@ -3,3 +3,6 @@ __pycache__
 .env
 .vercel
 .pytest_cache
+firebase_cred.json
+*key.json
+.vercel

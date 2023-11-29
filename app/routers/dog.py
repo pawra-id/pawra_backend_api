@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Response, File, UploadFile
 from app.schemes.dog import ResponseDog, Dog
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from app.database.config import get_db
 from app.utils import oauth2
+from app.utils.gcs import GCStorage
 from sqlalchemy import or_
 from app import models
 from datetime import datetime
@@ -70,3 +71,9 @@ async def delete_dog(id: int, db: Session = Depends(get_db), current_user: int =
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT, content="Dog deleted")
 
+
+#upload dog profile picture
+@router.post("/image", status_code=status.HTTP_200_OK)
+async def upload_dog_image(file: UploadFile = File(), current_user: int = Depends(oauth2.get_current_user)):
+    url  = await GCStorage().upload_file(file, 'dog_picture')
+    return url

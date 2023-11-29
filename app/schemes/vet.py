@@ -1,12 +1,14 @@
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Optional
 
 class Vet(BaseModel):
     name: str
     address: str
     clinic_name: str
     phone: str
-    description: str = None
+    description: Optional[str] = ""
+    image: Optional[str] = ""
 
 class ResponseVet(Vet):
     id: int

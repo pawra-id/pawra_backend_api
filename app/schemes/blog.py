@@ -6,7 +6,7 @@ from typing import Optional
 class Blog(BaseModel):
     title: str
     content: str
-    image: Optional[str] = None
+    image: Optional[str] = ""
 
 class ResponseBlog(Blog):
     id: int

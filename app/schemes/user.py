@@ -5,8 +5,10 @@ from typing import Optional
 class User(BaseModel):
     username: str
     email: EmailStr
-    summary: Optional[str] = None
-    address: Optional[str] = None
+    summary: Optional[str] = ""
+    address: Optional[str] = ""
+    image: Optional[str] = ""
+    summary: Optional[str] = ""
     
 class CreateUser(User):
     password: str

@@ -77,6 +77,7 @@ class Vet(Base):
     address = Column(String, nullable=False)
     clinic_name = Column(String, nullable=False)
     phone = Column(String, nullable=False)
+    image = Column(String, nullable=True)
     description = Column(String, nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     updated_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))

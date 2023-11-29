@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Response, File, UploadFile
+from app.utils.gcs import GCStorage
 from app.schemes.vet import ResponseVet, Vet
 from sqlalchemy.orm import Session
 from app.database.config import get_db
@@ -74,3 +75,11 @@ async def delete_vet(id: int, db: Session = Depends(get_db), current_user: int =
     db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT, content="Vet deleted")
+
+
+#upload vet profile picture
+@router.post("/image", status_code=status.HTTP_200_OK)
+async def upload_vet_image(file: UploadFile = File(), current_user: int = Depends(oauth2.get_current_user)):
+
+    url  = await GCStorage().upload_file(file, 'vet_picture')
+    return url

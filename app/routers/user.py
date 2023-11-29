@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
 from app.schemes.user import ResponseUser, CreateUser
 from sqlalchemy.orm import Session
 from app import models
@@ -7,6 +7,7 @@ from app.utils.crypt import hash
 from app.database.config import get_db
 from typing import List
 from datetime import datetime
+from app.utils.gcs import GCStorage
 
 router = APIRouter(
     tags=["Users"],
@@ -61,3 +62,11 @@ async def update_user(id: int, user: CreateUser, db: Session = Depends(get_db), 
     db.refresh(user_update.first())
 
     return user_update.first()
+
+
+#upload profile picture
+@router.post('/image', status_code=status.HTTP_200_OK)
+async def upload_profile_picture(file: UploadFile = File(),  current_user: int = Depends(oauth2.get_current_user)):
+    url  = await GCStorage().upload_file(file, 'profile_picture')
+
+    return url
