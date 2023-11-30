@@ -34,4 +34,7 @@ async def login(user_cred: OAuth2PasswordRequestForm = Depends(), db: Session = 
     #create access token
     access_token = create_token(data={"user_id": user.id})
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    #get logged in user
+    logged_in_user = db.query(models.User).filter(models.User.id == user.id).first()
+
+    return {"access_token": access_token, "token_type": "bearer", "user": logged_in_user}
