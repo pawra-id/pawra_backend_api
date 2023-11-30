@@ -7,6 +7,7 @@ from app.utils import oauth2
 from sqlalchemy import or_
 from app import models
 from datetime import datetime, timedelta
+import requests
 
 router = APIRouter(
     prefix="/analysis",
@@ -83,8 +84,12 @@ async def create_analysis(analysis: CreateAnalysis, days: int = 7, db: Session =
         models.Activity.dog_id == analysis.dog_id
     ).all()
 
-    #Send prediction request to ML API
-    ml_prediction = "0.45"
+    url = "https://pawra-ml-api-2gso7b5r3q-et.a.run.app/predict"
+    #Send prediction request to ML API with list of activities
+    response = requests.post(url, json=[activity.description for activity in activities])
+    
+    #mock prediction
+    ml_prediction = response.content.decode('utf-8')
     ml_description = "This is a description"
 
     #create analysis

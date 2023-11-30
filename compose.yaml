@@ -10,14 +10,16 @@ services:
       - ./:/usr/src/app:ro
     command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
     environment:
-      - DATABASE_HOSTNAME=postgres
+      - DATABASE_HOSTNAME=ep-odd-wood-51064511-pooler.ap-southeast-1.postgres.vercel-storage.com
       - DATABASE_PORT=5432
-      - DATABASE_NAME=fastapi2
-      - DATABASE_USERNAME=postgres
-      - DATABASE_PASSWORD=1sampai9
+      - DATABASE_NAME=verceldb
+      - DATABASE_USERNAME=default
+      - DATABASE_PASSWORD=U2MJFrSZBR5g
       - SECRET_KEY=fb0829367f3c4caad977966db0fcc264338aad9ea609da9305f54115b8877a0e
       - ALGORITHM=HS256
       - ACCESS_TOKEN_EXPIRE_MINUTES=60
+      - GOOGLE_APPLICATION_CREDENTIALS=app/cert/pawra-key.json
+      - BUCKET_NAME=pawra-bucket
   
   postgres:
     image: postgres
