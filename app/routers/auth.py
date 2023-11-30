@@ -37,4 +37,7 @@ async def login(user_cred: OAuth2PasswordRequestForm = Depends(), db: Session = 
     #get logged in user
     logged_in_user = db.query(models.User).filter(models.User.id == user.id).first()
 
+    #remove password attribute from user
+    logged_in_user.password = None
+
     return {"access_token": access_token, "token_type": "bearer", "user": logged_in_user}
