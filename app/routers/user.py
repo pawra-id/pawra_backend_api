@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
-from app.schemes.user import ResponseUser, CreateUser
+from app.schemes.user import ResponseUser, CreateUser, User
 from sqlalchemy.orm import Session
 from app import models
 from app.utils import oauth2
@@ -46,15 +46,16 @@ async def get_user(id: int, db: Session = Depends(get_db), current_user: int = D
     return user
 
 @router.put('/{id}', response_model=ResponseUser)
-async def update_user(id: int, user: CreateUser, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+async def update_user(id: int, user: User, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     #get user by id
     user_update = db.query(models.User).filter(models.User.id == id)
     #check if user exists
     if not user_update.first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User doesnt exist")
-    
+
     #update user
     user_update.update(user.model_dump())
+
     user_update.update({
         'updated_at': datetime.now()
     })
