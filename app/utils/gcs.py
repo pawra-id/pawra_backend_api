@@ -5,6 +5,7 @@ import hashlib
 
 class GCStorage:
     def __init__(self):
+        # self.client = storage.Client.from_service_account_json(settings.google_application_credentials)
         self.client = storage.Client()
         self.bucket = self.client.get_bucket(settings.bucket_name)
 
