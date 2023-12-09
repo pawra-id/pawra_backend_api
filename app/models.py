@@ -14,6 +14,8 @@ class User(Base):
     summary = Column(String, nullable=True)
     address = Column(String, nullable=True)
     image = Column(String, nullable=True)
+    latitude = Column(String, nullable=True)
+    longitude = Column(String, nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     updated_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
 
@@ -79,6 +81,8 @@ class Vet(Base):
     phone = Column(String, nullable=False)
     image = Column(String, nullable=True)
     description = Column(String, nullable=True)
+    latitude = Column(String, nullable=True)
+    longitude = Column(String, nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     updated_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
 

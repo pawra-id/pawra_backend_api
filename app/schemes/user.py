@@ -9,6 +9,8 @@ class User(BaseModel):
     address: Optional[str] = ""
     image: Optional[str] = ""
     summary: Optional[str] = ""
+    latitude: Optional[str] = ""
+    longitude: Optional[str] = ""
     
 class CreateUser(User):
     password: str

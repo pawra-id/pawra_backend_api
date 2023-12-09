@@ -9,6 +9,8 @@ class Vet(BaseModel):
     phone: str
     description: Optional[str] = ""
     image: Optional[str] = ""
+    latitude: Optional[str] = ""
+    longitude: Optional[str] = ""
 
 class ResponseVet(Vet):
     id: int
