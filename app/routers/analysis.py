@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.database.config import get_db
 from app.utils import oauth2
 from sqlalchemy import or_
+from app.config import settings
 from fastapi_pagination.ext.sqlalchemy import paginate
 from app import models
 from datetime import datetime, timedelta
@@ -98,10 +99,14 @@ async def create_analysis(analysis: CreateAnalysis, days: int = 7, db: Session =
         models.Activity.dog_id == analysis.dog_id
     ).all()
 
-    url = "https://pawra-ml-api-2gso7b5r3q-et.a.run.app/predict"
+    url = settings.ml_api_url + "/predict"
     #Send prediction request to ML API with list of activities
     response = requests.post(url, json=[activity.description for activity in activities])
     
+    if response.status_code == 400:
+        #return json with message activity empty
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Activity list is empty")
+
     #mock prediction
     ml_prediction = response.content.decode('utf-8')
     ml_description = "This is a description"
