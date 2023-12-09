@@ -6,7 +6,9 @@ from app.database.config import get_db
 from app.utils import oauth2
 from app.utils.gcs import GCStorage
 from sqlalchemy import or_
+from fastapi_pagination.ext.sqlalchemy import paginate
 from app import models
+from fastapi_pagination import Page
 from datetime import datetime
 
 router = APIRouter(
@@ -14,16 +16,16 @@ router = APIRouter(
     tags=["Dogs"]
 )
 
-@router.get("/", response_model=List[ResponseDog])
-async def get_dogs(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), limit: int = 15, skip: int = 0, search: Optional[str] = ""):
+@router.get("/", response_model=Page[ResponseDog])
+async def get_dogs(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: Optional[str] = ""):
     #only can see their own dogs
     dogs = db.query(models.Dog).filter(
         or_(
             models.Dog.name.contains(search.lower()),
             models.Dog.breed.contains(search.lower()),
         ), 
-        models.Dog.owner_id == current_user.id).limit(limit).offset(skip).all()
-    return dogs
+        models.Dog.owner_id == current_user.id)
+    return paginate(db, dogs)
 
 @router.get("/{id}", response_model=ResponseDog)
 async def get_dog(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):

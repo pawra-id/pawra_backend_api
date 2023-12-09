@@ -5,8 +5,10 @@ from sqlalchemy.orm import Session
 from app.database.config import get_db
 from app.utils import oauth2
 from sqlalchemy import or_
+from fastapi_pagination.ext.sqlalchemy import paginate
 from app import models
 from datetime import datetime, timedelta
+from fastapi_pagination import Page
 import requests
 
 router = APIRouter(
@@ -15,41 +17,53 @@ router = APIRouter(
 )
 
 #get my analysis
-@router.get("/", response_model=List[ResponseAnalysis])
-async def get_analysis(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), limit: int = 15, skip: int = 0, search: Optional[str] = ''):
+@router.get("/", response_model=Page[ResponseAnalysis])
+async def get_analysis(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: Optional[str] = ''):
     #only show my analysis from my dogs
     analysis = db.query(models.Analysis).join(models.Dog).filter(
-        models.Analysis.description.contains(search.lower()),
+        or_(
+            models.Analysis.description.contains(search.lower()),
+            models.Analysis.prediction.contains(search.lower())
+        ),
         models.Dog.owner_id == current_user.id
-        ).limit(limit).offset(skip).all()
-    return analysis
+        )
+    return paginate(db, analysis)
 
 
 #get all analysis
-@router.get("/all", response_model=List[ResponseAnalysis])
-async def get_all_analysis(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), limit: int = 15, skip: int = 0, search: Optional[str] = ''):
+@router.get("/all", response_model=Page[ResponseAnalysis])
+async def get_all_analysis(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: Optional[str] = ''):
     analysis = db.query(models.Analysis).join(models.Dog).filter(
-        models.Analysis.description.contains(search.lower())
-        ).limit(limit).offset(skip).all()
-    return analysis
+        or_(
+            models.Analysis.description.contains(search.lower()),
+            models.Analysis.prediction.contains(search.lower())
+        ),
+        )
+    return paginate(db, analysis)
 
 #Get all shared analysis
-@router.get("/shared", response_model=List[ResponseAnalysis])
-async def get_shared_analysis(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), limit: int = 15, skip: int = 0, search: Optional[str] = ''):
+@router.get("/shared", response_model=Page[ResponseAnalysis])
+async def get_shared_analysis(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: Optional[str] = ''):
     analysis = db.query(models.Analysis).join(models.Dog).filter(
-        models.Analysis.description.contains(search.lower()),
+        or_(
+            models.Analysis.description.contains(search.lower()),
+            models.Analysis.prediction.contains(search.lower())
+        ),
         models.Analysis.is_shared == True
-        ).limit(limit).offset(skip).all()
-    return analysis
+        )
+    return paginate(db, analysis)
 
 #get analysis by dog id
-@router.get("/dog/{id}", response_model=List[ResponseAnalysis])
-async def get_analysis_by_dog(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), limit: int = 15, skip: int = 0, search: Optional[str] = ''):
+@router.get("/dog/{id}", response_model=Page[ResponseAnalysis])
+async def get_analysis_by_dog(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: Optional[str] = ''):
     analysis = db.query(models.Analysis).join(models.Dog).filter(
-        models.Analysis.description.contains(search.lower()),
+        or_(
+            models.Analysis.description.contains(search.lower()),
+            models.Analysis.prediction.contains(search.lower())
+        ),
         models.Dog.id == id
-        ).limit(limit).offset(skip).all()
-    return analysis
+        )
+    return paginate(db, analysis)
 
 #get analysis by id
 @router.get("/{id}", response_model=ResponseAnalysis)

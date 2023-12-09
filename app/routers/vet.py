@@ -6,6 +6,9 @@ from app.database.config import get_db
 from app import models
 from typing import List
 from app.utils import oauth2
+from fastapi_pagination import Page
+from sqlalchemy import or_
+from fastapi_pagination.ext.sqlalchemy import paginate
 from datetime import datetime
 
 router = APIRouter(
@@ -13,14 +16,20 @@ router = APIRouter(
     prefix="/vets"
 )
 
-@router.get("/", response_model=List[ResponseVet])
-async def get_vets(db: Session = Depends(get_db), limit: int = 15, skip: int = 0, search: str = "", current_user: int = Depends(oauth2.get_current_user)):
+@router.get("/", response_model=Page[ResponseVet])
+async def get_vets(db: Session = Depends(get_db), search: str = "", current_user: int = Depends(oauth2.get_current_user)):
     #get all vets
     vets = db.query(models.Vet).\
-        filter(models.Vet.name.contains(search.lower())).\
-        limit(limit).offset(skip).\
-        all()
-    return vets
+        filter(
+            or_(
+                models.Vet.name.contains(search.lower()),
+                models.Vet.address.contains(search.lower()),
+                models.Vet.phone.contains(search.lower()),
+                models.Vet.clinic_name.contains(search.lower()),
+                models.Vet.description.contains(search.lower())
+            )
+        )
+    return paginate(db, vets)
 
 @router.get("/{id}", response_model=ResponseVet)
 async def get_vet(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):

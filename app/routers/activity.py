@@ -6,20 +6,22 @@ from sqlalchemy.orm import Session
 from app import models
 from app.utils import oauth2
 from datetime import datetime
+from fastapi_pagination import Page
+from fastapi_pagination.ext.sqlalchemy import paginate
 
 router = APIRouter(
     prefix="/activities",
     tags=['Activity']
 )
 
-@router.get('/', response_model=List[ResponseActivity])
-async def get_activities(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), limit: int = 15, skip: int = 0, search: str = ''):
+@router.get('/', response_model=Page[ResponseActivity])
+async def get_activities(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: str = ''):
     #only show my activities from my dogs
     activities = db.query(models.Activity).join(models.Dog).filter(
         models.Activity.description.contains(search.lower()),
         models.Dog.owner_id == current_user.id
-        ).limit(limit).offset(skip).all()
-    return activities
+        )
+    return paginate(db, activities)
 
 @router.get('/{id}', response_model=ResponseActivity)
 async def get_activity(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
@@ -132,8 +134,8 @@ async def delete_activity(id: int, db: Session = Depends(get_db), current_user: 
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-@router.get('/dog/{id}', response_model=List[ResponseActivity])
-async def get_activity_by_dog(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), limit: int = 15, skip: int = 0, search: str = ''):
+@router.get('/dog/{id}', response_model=Page[ResponseActivity])
+async def get_activity_by_dog(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: str = ''):
     #check if dog exists
     dog = db.query(models.Dog).filter(models.Dog.id == id).first()
     if not dog:
@@ -145,5 +147,6 @@ async def get_activity_by_dog(id: int, db: Session = Depends(get_db), current_us
     activities = db.query(models.Activity).filter(
         models.Activity.dog_id == id,
         models.Activity.description.contains(search.lower())
-        ).limit(limit).offset(skip).all()
-    return activities
+        )
+    
+    return paginate(db, activities)

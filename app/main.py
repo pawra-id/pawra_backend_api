@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends
 from app.utils import oauth2
 from app.routers import auth, user, dog, activity, vet, blog, analysis
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_pagination import add_pagination
 
 app = FastAPI()
 
@@ -14,6 +15,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+add_pagination(app)
 
 app.include_router(auth.router)
 app.include_router(user.router)

@@ -5,20 +5,30 @@ from app import models
 from app.utils import oauth2
 from app.utils.crypt import hash
 from app.database.config import get_db
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 from app.utils.gcs import GCStorage
+from fastapi_pagination import Page
+from sqlalchemy import or_
+from fastapi_pagination.ext.sqlalchemy import paginate
 
 router = APIRouter(
     tags=["Users"],
     prefix="/users"
 )
 
-@router.get("/", response_model=List[ResponseUser])
-async def get_users(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+@router.get("/", response_model=Page[ResponseUser])
+async def get_users(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: Optional[str] = ""):
     #get all users
-    users = db.query(models.User).all()
-    return users
+    users = db.query(models.User).filter(
+        or_(
+            models.User.username.contains(search.lower()),
+            models.User.email.contains(search.lower()),
+            models.User.address.contains(search.lower()),
+        )
+    )
+
+    return paginate(db, users)
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=ResponseUser)
 async def create_user(user: CreateUser, db: Session = Depends(get_db)):
@@ -63,7 +73,6 @@ async def update_user(id: int, user: User, db: Session = Depends(get_db), curren
     db.refresh(user_update.first())
 
     return user_update.first()
-
 
 #upload profile picture
 @router.post('/image', status_code=status.HTTP_200_OK)

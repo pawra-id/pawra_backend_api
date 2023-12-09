@@ -4,9 +4,11 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from app.database.config import get_db
 from app.utils import oauth2
-from sqlalchemy import or_
 from app import models
 from app.utils.gcs import GCStorage
+from fastapi_pagination import Page
+from sqlalchemy import or_
+from fastapi_pagination.ext.sqlalchemy import paginate
 from datetime import datetime
 
 router = APIRouter(
@@ -14,16 +16,16 @@ router = APIRouter(
     tags=["Blogs"]
 )
 
-@router.get("/", response_model=List[ResponseBlog])
-async def get_blogs(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), limit: int = 15, skip: int = 0, search: Optional[str] = ""):
+@router.get("/", response_model=Page[ResponseBlog])
+async def get_blogs(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: Optional[str] = ""):
     #only can see their own blogs
     blogs = db.query(models.Blog).filter(
         or_(
             models.Blog.title.contains(search.lower()),
             models.Blog.content.contains(search.lower()),
         ), 
-        models.Blog.author_id == current_user.id).limit(limit).offset(skip).all()
-    return blogs
+        models.Blog.author_id == current_user.id)
+    return paginate(db, blogs)
 
 @router.get("/{id}", response_model=ResponseBlog)
 async def get_blog(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
@@ -64,14 +66,14 @@ async def delete_blog(id: int, db: Session = Depends(get_db), current_user: int 
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-@router.get("/all", response_model=List[ResponseBlog])
-async def get_all_blogs(db: Session = Depends(get_db), limit: int = 15, skip: int = 0, search: Optional[str] = ""):
+@router.get("/all", response_model=Page[ResponseBlog])
+async def get_all_blogs(db: Session = Depends(get_db), search: Optional[str] = ""):
     blogs = db.query(models.Blog).filter(
         or_(
             models.Blog.title.contains(search.lower()),
             models.Blog.content.contains(search.lower()),
-        )).limit(limit).offset(skip).all()
-    return blogs
+        ))
+    return paginate(db, blogs)
 
 
 #upload blog image
