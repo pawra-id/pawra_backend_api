@@ -11,6 +11,7 @@ class User(Base):
     username = Column(String, unique=True, nullable=False)
     email = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
+    role = Column(String, nullable=False, server_default='user')
     summary = Column(String, nullable=True)
     address = Column(String, nullable=True)
     image = Column(String, nullable=True)

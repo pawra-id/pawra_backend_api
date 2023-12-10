@@ -16,8 +16,9 @@ router = APIRouter(
     tags=["Dogs"]
 )
 
+#Get current user dogs
 @router.get("/", response_model=Page[ResponseDog])
-async def get_dogs(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: Optional[str] = ""):
+async def get_my_dogs(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: Optional[str] = ""):
     #only can see their own dogs
     dogs = db.query(models.Dog).filter(
         or_(
@@ -27,13 +28,15 @@ async def get_dogs(db: Session = Depends(get_db), current_user: int = Depends(oa
         models.Dog.owner_id == current_user.id)
     return paginate(db, dogs)
 
+#Get dog by id (current user)
 @router.get("/{id}", response_model=ResponseDog)
-async def get_dog(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+async def get_dog_by_id(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     dog = db.query(models.Dog).filter(models.Dog.id == id, models.Dog.owner_id == current_user.id).first()
     if not dog:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Dog doesnt exist")
     return dog
 
+#Create dog (all)
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=ResponseDog)
 async def create_dog(dog: Dog, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     #lowercase the all
@@ -47,6 +50,7 @@ async def create_dog(dog: Dog, db: Session = Depends(get_db), current_user: int 
     db.refresh(new_dog)
     return new_dog
 
+#Update dog (current user)
 @router.put("/{id}", status_code=status.HTTP_202_ACCEPTED, response_model=ResponseDog)
 async def update_dog(id: int, dog: Dog, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     dog_update = db.query(models.Dog).filter(models.Dog.id == id, models.Dog.owner_id == current_user.id)
@@ -62,6 +66,7 @@ async def update_dog(id: int, dog: Dog, db: Session = Depends(get_db), current_u
     db.refresh(dog_update.first())
     return dog_update.first()
 
+#Delete dog (current user)
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_dog(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     dog_delete = db.query(models.Dog).filter(models.Dog.id == id, models.Dog.owner_id == current_user.id)
@@ -74,7 +79,7 @@ async def delete_dog(id: int, db: Session = Depends(get_db), current_user: int =
     return Response(status_code=status.HTTP_204_NO_CONTENT, content="Dog deleted")
 
 
-#upload dog profile picture
+#upload dog profile picture (all)
 @router.post("/image", status_code=status.HTTP_200_OK)
 async def upload_dog_image(file: UploadFile = File(), current_user: int = Depends(oauth2.get_current_user)):
     url  = await GCStorage().upload_file(file, 'dog_picture')

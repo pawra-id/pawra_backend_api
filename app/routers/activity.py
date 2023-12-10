@@ -14,8 +14,10 @@ router = APIRouter(
     tags=['Activity']
 )
 
+
+#Get all activities from only my dogs (current user)
 @router.get('/', response_model=Page[ResponseActivity])
-async def get_activities(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: str = ''):
+async def get_my_dogs_activities(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: str = ''):
     #only show my activities from my dogs
     activities = db.query(models.Activity).join(models.Dog).filter(
         models.Activity.description.contains(search.lower()),
@@ -23,6 +25,7 @@ async def get_activities(db: Session = Depends(get_db), current_user: int = Depe
         )
     return paginate(db, activities)
 
+#Get activity by id (current user)
 @router.get('/{id}', response_model=ResponseActivity)
 async def get_activity(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     activity = db.query(models.Activity).join(models.Dog).filter(
@@ -33,6 +36,7 @@ async def get_activity(id: int, db: Session = Depends(get_db), current_user: int
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Activity not found')
     return activity
 
+#Create activity
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=ResponseActivity)
 async def create_activity(activity: CreateActivity, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     dog = db.query(models.Dog).filter(models.Dog.id == activity.dog_id).first()
@@ -73,6 +77,7 @@ async def create_activity(activity: CreateActivity, db: Session = Depends(get_db
 
     return created_activity
 
+#Update activity (current user)
 @router.put('/{id}', status_code=status.HTTP_202_ACCEPTED, response_model=ResponseActivity)
 async def update_activity(id: int, activity: CreateActivity, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     #get activity by id, dog, and owner
@@ -117,6 +122,7 @@ async def update_activity(id: int, activity: CreateActivity, db: Session = Depen
             
     return updated_activity
 
+#Delete activity (current user)
 @router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_activity(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     #get activity by id, dog, and owner
@@ -134,6 +140,7 @@ async def delete_activity(id: int, db: Session = Depends(get_db), current_user: 
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
+#Get all activities by dog id (current user)
 @router.get('/dog/{id}', response_model=Page[ResponseActivity])
 async def get_activity_by_dog(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: str = ''):
     #check if dog exists

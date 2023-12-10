@@ -5,6 +5,7 @@ from typing import Optional
 class User(BaseModel):
     username: str
     email: EmailStr
+    role: Optional[str] = ""
     summary: Optional[str] = ""
     address: Optional[str] = ""
     image: Optional[str] = ""
@@ -22,5 +23,4 @@ class ResponseUser(User):
 
     class Config:
         from_attributes = True
-        orm_mode = True
 

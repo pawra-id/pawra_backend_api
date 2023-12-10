@@ -11,14 +11,22 @@ from app.utils.gcs import GCStorage
 from fastapi_pagination import Page
 from sqlalchemy import or_
 from fastapi_pagination.ext.sqlalchemy import paginate
+from app.utils.roles import RoleChecker, Role
 
 router = APIRouter(
     tags=["Users"],
     prefix="/users"
 )
 
-@router.get("/", response_model=Page[ResponseUser])
-async def get_users(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: Optional[str] = ""):
+only_admin_allowed = RoleChecker([Role.ADMIN.value])
+
+#Get all user
+@router.get(
+        "/", 
+        response_model=Page[ResponseUser], 
+        dependencies=[Depends(only_admin_allowed)],
+        )
+async def admin_get_all_users(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: Optional[str] = ""):
     #get all users
     users = db.query(models.User).filter(
         or_(
@@ -30,6 +38,7 @@ async def get_users(db: Session = Depends(get_db), current_user: int = Depends(o
 
     return paginate(db, users)
 
+#Create user
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=ResponseUser)
 async def create_user(user: CreateUser, db: Session = Depends(get_db)):
     #hasing password
@@ -45,6 +54,7 @@ async def create_user(user: CreateUser, db: Session = Depends(get_db)):
 
     return new_user
 
+#Get user by id
 @router.get("/{id}", response_model=ResponseUser)
 async def get_user(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     #get user by id
@@ -55,6 +65,7 @@ async def get_user(id: int, db: Session = Depends(get_db), current_user: int = D
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User doesnt exist")
     return user
 
+#Update user by id
 @router.put('/{id}', response_model=ResponseUser)
 async def update_user(id: int, user: User, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     #get user by id
