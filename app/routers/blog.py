@@ -29,7 +29,7 @@ async def get_blogs(db: Session = Depends(get_db), current_user: int = Depends(o
 #Get blog by id
 @router.get("/{id}", response_model=ResponseBlog)
 async def get_blog(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
-    blog = db.query(models.Blog).filter(models.Blog.id == id, models.Blog.author_id == current_user.id).first()
+    blog = db.query(models.Blog).filter(models.Blog.id == id).first()
     if not blog:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Blog doesnt exist")
     return blog

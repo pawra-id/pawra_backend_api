@@ -6,12 +6,13 @@ from app.utils.crypt import verify
 from app.utils.oauth2 import create_token
 from sqlalchemy import or_
 from app import models
+from app.schemes.token import Token
 
 router = APIRouter(
     tags=["Authentication"],
 )
 
-@router.post("/token")
+@router.post("/token", response_model=Token)
 async def login(user_cred: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     #OAuth2PasswordRequestForm only has 2 keys: username and password
     #in this case we pass email into the username key
