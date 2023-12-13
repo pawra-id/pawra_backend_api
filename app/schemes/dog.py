@@ -13,6 +13,7 @@ class Dog(BaseModel):
     weight: Optional[int] = None
     height: Optional[int] = None
     description: Optional[str] = None
+    microchip_id: Optional[str] = None
     image: Optional[str] = None
 
 class ResponseDog(Dog):

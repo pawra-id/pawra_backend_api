@@ -8,6 +8,11 @@ class Vet(BaseModel):
     clinic_name: str
     phone: str
     description: Optional[str] = ""
+    email: Optional[str] = ""
+    start_work_hour: Optional[str] = ""
+    end_work_hour: Optional[str] = ""
+    experience: Optional[str] = ""
+    education: Optional[str] = ""
     image: Optional[str] = ""
     latitude: Optional[str] = ""
     longitude: Optional[str] = ""
