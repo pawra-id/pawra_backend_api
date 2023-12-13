@@ -12,6 +12,11 @@ router = APIRouter(
     tags=["Tags"]
 )
 
+@router.get('/', response_model=List[ResponseTag])
+async def search_tags(search: str = "", db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+    tags = db.query(models.Tag).filter(models.Tag.name.contains(search.lower())).all()
+    return tags
+
 @router.get('/most_used', response_model=List[ResponseTag])
 async def get_most_used_tags(limit: int = 5, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     #get activities count of tag with id 1
@@ -20,9 +25,4 @@ async def get_most_used_tags(limit: int = 5, db: Session = Depends(get_db), curr
             group_by(models.Tag.id).\
                 order_by(func.count(models.Activity.id).\
                          desc()).limit(limit).all()
-    return tags
-
-@router.get('/', response_model=List[ResponseTag])
-async def search_tags(search: str = "", db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
-    tags = db.query(models.Tag).filter(models.Tag.name.contains(search.lower())).all()
     return tags

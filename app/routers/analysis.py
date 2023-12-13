@@ -4,7 +4,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from app.database.config import get_db
 from app.utils import oauth2
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from app.config import settings
 from fastapi_pagination.ext.sqlalchemy import paginate
 from app import models
@@ -63,7 +63,7 @@ async def create_analysis(analysis: CreateAnalysis, days: int = 7, db: Session =
         models.Activity.dog_id == analysis.dog_id
     ).all()
 
-    url = settings.ml_api_url + "/predict"
+    url = f"{settings.ml_api_url}/predict"
     #Send prediction request to ML API with list of activities
     response = requests.post(url, json=[activity.description for activity in activities])
     
@@ -74,6 +74,9 @@ async def create_analysis(analysis: CreateAnalysis, days: int = 7, db: Session =
     #mock prediction
     ml_prediction = response.content.decode('utf-8')
     ml_description = "This is a description"
+
+    #get 5 random actions from db
+    actions = db.query(models.Actions).order_by(func.random()).limit(5).all()
 
     #create analysis
     new_analysis = models.Analysis(
@@ -89,6 +92,9 @@ async def create_analysis(analysis: CreateAnalysis, days: int = 7, db: Session =
 
     #attach activities to analysis
     created_analysis.activities.extend(activities)
+
+    #attach actions to analysis
+    created_analysis.actions.extend(actions)
 
     db.commit()
     db.refresh(created_analysis)

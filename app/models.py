@@ -51,6 +51,11 @@ activity_analysis = Table('activity_analysis', Base.metadata,
     Column('activity_id', Integer, ForeignKey('activities.id', ondelete='CASCADE'), nullable=False)
 )
 
+action_analysis = Table('action_analysis', Base.metadata,
+    Column('analysis_id', Integer, ForeignKey('analysis.id', ondelete='CASCADE'), nullable=False),
+    Column('action_id', Integer, ForeignKey('actions.id', ondelete='CASCADE'), nullable=False)
+)
+
 class Activity(Base):
     __tablename__ = "activities"
 
@@ -106,7 +111,6 @@ class Blog(Base):
 
     author = relationship("User")
 
-
 class Analysis(Base):
     __tablename__ = "analysis"
 
@@ -120,4 +124,15 @@ class Analysis(Base):
 
     dog = relationship("Dog")
     activities = relationship('Activity', secondary=activity_analysis, back_populates='analysis')
+    actions = relationship('Actions', secondary=action_analysis, back_populates='analysis')
 
+class Actions(Base):
+    __tablename__ = "actions"
+
+    id = Column(Integer, primary_key=True, nullable=False, index=True)
+    action = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    updated_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+
+    analysis = relationship('Analysis', secondary=action_analysis, back_populates='actions')

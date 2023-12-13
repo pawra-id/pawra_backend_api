@@ -20,3 +20,10 @@ class ResponseActivity(Activity):
 
     class Config:
         from_attributes = True
+
+class ActivityForAnalysis(BaseModel):
+    id: int
+    description: str
+    created_at: datetime
+    updated_at: datetime
+    tags: List[Tag]

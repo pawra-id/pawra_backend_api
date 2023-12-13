@@ -37,6 +37,44 @@ async def admin_get_activity_by_id(id: int, db: Session = Depends(get_db), curre
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Activity not found')
     return activity
 
+#Create activity (admin only)
+@router.post('/', status_code=status.HTTP_201_CREATED, response_model=ResponseActivity)
+async def admin_create_activity(activity: CreateActivity, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+    dog = db.query(models.Dog).filter(models.Dog.id == activity.dog_id).first()
+    #Check if dog exist
+    if not dog:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Dog with id {activity.dog_id} not found')
+
+    #create activity
+    new_activity = models.Activity(
+        description = activity.description,
+        dog_id = activity.dog_id
+    )
+    db.add(new_activity)
+    db.commit()
+    db.refresh(new_activity)
+
+    created_activity = db.query(models.Activity).filter(models.Activity.id == new_activity.id).first()
+    #extract tags from activity request
+    for tag in activity.tags:
+        #check if tag exist in db
+        tag_check = db.query(models.Tag).filter(models.Tag.name == tag.name).first()
+        if tag_check is None:
+            #if no, create new tag with lowercase name
+            new_tag = models.Tag(name=tag.name.lower())
+            db.add(new_tag)
+            #add tag to activity
+            created_activity.tags.append(new_tag)
+        else:
+        #else, select tag from db
+            created_activity.tags.append(tag_check)
+        
+        
+    db.commit()
+    db.refresh(created_activity)
+
+    return created_activity
+
 #Update activity (admin only)
 @router.put('/{id}', status_code=status.HTTP_202_ACCEPTED, response_model=ResponseActivity, dependencies=[Depends(only_admin_allowed)])
 async def admin_update_activity(id: int, activity: CreateActivity, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
