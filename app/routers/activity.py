@@ -62,8 +62,8 @@ async def create_activity(activity: CreateActivity, db: Session = Depends(get_db
         #check if tag exist in db
         tag_check = db.query(models.Tag).filter(models.Tag.name == tag.name).first()
         if tag_check is None:
-            #if no, create new tag
-            new_tag = models.Tag(name=tag.name)
+            #if no, create new tag with lowercase name
+            new_tag = models.Tag(name=tag.name.lower())
             db.add(new_tag)
             #add tag to activity
             created_activity.tags.append(new_tag)
@@ -111,7 +111,7 @@ async def update_activity(id: int, activity: CreateActivity, db: Session = Depen
         tag_check = db.query(models.Tag).filter(models.Tag.name == tag.name).first()
         if tag_check is None:
             #if no, create new tag
-            new_tag = models.Tag(name=tag.name)
+            new_tag = models.Tag(name=tag.name.lower())
             db.add(new_tag)
             #add tag to activity
             updated_activity.tags.append(new_tag)

@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends
 from app.utils import oauth2
-from app.routers import auth, user, dog, activity, vet, blog, analysis
+from app.routers import auth, user, tag, dog, activity, vet, blog, analysis
 from app.routers.admin import admin_dog, admin_activity, admin_vets, admin_blog, admin_analysis
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
@@ -37,6 +37,8 @@ app.include_router(admin_blog.router)
 
 app.include_router(analysis.router)
 app.include_router(admin_analysis.router)
+
+app.include_router(tag.router)
 
 
 @app.get("/")
