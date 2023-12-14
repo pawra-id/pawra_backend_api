@@ -48,7 +48,8 @@ async def admin_update_action(id: int, action: Action, db: Session = Depends(get
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Action with id {id} not found')
     action.update({
         'action': action.action,
-        'description': action.description
+        'description': action.description,
+        'updated_at': datetime.now()
     })
     db.commit()
     return action.first()

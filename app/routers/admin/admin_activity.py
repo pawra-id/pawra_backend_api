@@ -91,15 +91,14 @@ async def admin_update_activity(id: int, activity: CreateActivity, db: Session =
         filter(models.Activity.id == activity_update.first().id).\
         update({
             models.Activity.description: activity.description,
-            models.Activity.dog_id: activity.dog_id
+            models.Activity.dog_id: activity.dog_id,
+            models.Activity.updated_at: datetime.now()
         })
     db.commit()
     db.refresh(activity_update.first())
 
     updated_activity = db.query(models.Activity).filter(models.Activity.id == activity_update.first().id).first()
-    update_activity.update({
-        'updated_at': datetime.now()
-    })
+
     # detach all tags from activity
     updated_activity.tags.clear()
     

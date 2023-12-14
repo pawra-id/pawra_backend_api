@@ -9,6 +9,7 @@ from app import models
 from app.config import settings as s
 from app.schemes.token import Token
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 router = APIRouter(
     tags=["Authentication"],
@@ -37,7 +38,7 @@ async def login(user_cred: OAuth2PasswordRequestForm = Depends(), db: Session = 
     #create access token
     access_token = create_token(data={"user_id": user.id})
     #set expiration time
-    expire = str(datetime.utcnow() + timedelta(minutes=s.access_token_expire_minutes))
+    expire = str(datetime.now(ZoneInfo("Asia/Jakarta")) + timedelta(minutes=s.access_token_expire_minutes))
 
     #get logged in user
     logged_in_user = db.query(models.User).filter(models.User.id == user.id).first()

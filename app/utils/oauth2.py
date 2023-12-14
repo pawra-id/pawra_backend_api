@@ -20,7 +20,7 @@ def create_token(data: dict):
     to_encode = data.copy()
 
     #set expiration time
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     #add expiration time to data
     to_encode.update({"exp": expire})
     #encode data
