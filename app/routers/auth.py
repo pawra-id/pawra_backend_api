@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from app.database.config import get_db
 from app.utils.crypt import verify
-from app.utils.oauth2 import create_token
+from app.utils.oauth2 import create_token, verify_access_token, oauth2_scheme
 from sqlalchemy import or_
 from app import models
 from app.config import settings as s
@@ -47,3 +47,20 @@ async def login(user_cred: OAuth2PasswordRequestForm = Depends(), db: Session = 
     logged_in_user.password = None
 
     return {"access_token": access_token, "expires_in": expire, "token_type": "bearer", "user": logged_in_user}
+
+@router.post('/token/refresh', response_model=Token)
+def refresh_token(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    # Verify the old token
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    token = verify_access_token(token, credentials_exception)
+    
+    new_token = create_token(data={"user_id": token.id})  # replace "user_id" with the actual user id
+    logged_in_user = db.query(models.User).filter(models.User.id == token.id).first()
+    expire = str(datetime.now(ZoneInfo("Asia/Jakarta")) + timedelta(minutes=s.access_token_expire_minutes))
+
+    return {"access_token": new_token, "expires_in": expire, "token_type": "bearer", "user": logged_in_user}
+
