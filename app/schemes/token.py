@@ -10,3 +10,6 @@ class Token(BaseModel):
     token_type: str
     expires_in: str
     user: ResponseUser
+
+class RefreshToken(BaseModel):
+    access_token: str

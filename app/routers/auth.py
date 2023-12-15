@@ -7,7 +7,7 @@ from app.utils.oauth2 import create_token, verify_access_token, oauth2_scheme
 from sqlalchemy import or_
 from app import models
 from app.config import settings as s
-from app.schemes.token import Token
+from app.schemes.token import Token, RefreshToken
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -49,17 +49,17 @@ async def login(user_cred: OAuth2PasswordRequestForm = Depends(), db: Session = 
     return {"access_token": access_token, "expires_in": expire, "token_type": "bearer", "user": logged_in_user}
 
 @router.post('/token/refresh', response_model=Token)
-def refresh_token(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+def refresh_token(token: RefreshToken, db: Session = Depends(get_db)):
     # Verify the old token
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
     )
-    token = verify_access_token(token, credentials_exception)
+
+    tok = verify_access_token(token.access_token, credentials_exception)
     
-    new_token = create_token(data={"user_id": token.id})  # replace "user_id" with the actual user id
-    logged_in_user = db.query(models.User).filter(models.User.id == token.id).first()
+    new_token = create_token(data={"user_id": tok.id})  # replace "user_id" with the actual user id
+    logged_in_user = db.query(models.User).filter(models.User.id == tok.id).first()
     expire = str(datetime.now(ZoneInfo("Asia/Jakarta")) + timedelta(minutes=s.access_token_expire_minutes))
 
     return {"access_token": new_token, "expires_in": expire, "token_type": "bearer", "user": logged_in_user}

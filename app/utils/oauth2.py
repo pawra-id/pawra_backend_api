@@ -33,6 +33,7 @@ def verify_access_token(token: str, credentials_exception):
     try:
         #decode token
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+
         #get user id from decoded token
         id: str = payload.get('user_id')
         #if id is None, raise exception
