@@ -4,7 +4,7 @@ from app.schemes.vet import ResponseVet, Vet
 from sqlalchemy.orm import Session
 from app.database.config import get_db
 from app import models
-from typing import List
+from typing import List, Optional
 from app.utils import oauth2
 from fastapi_pagination import Page
 from sqlalchemy import or_
@@ -17,18 +17,17 @@ router = APIRouter(
 )
 
 @router.get("/", response_model=Page[ResponseVet])
-async def get_vets(db: Session = Depends(get_db), search: str = "", current_user: int = Depends(oauth2.get_current_user)):
-    #get all vets
-    vets = db.query(models.Vet).\
-        filter(
-            or_(
-                models.Vet.name.contains(search.lower()),
-                models.Vet.address.contains(search.lower()),
-                models.Vet.phone.contains(search.lower()),
-                models.Vet.clinic_name.contains(search.lower()),
-                models.Vet.description.contains(search.lower())
-            )
+async def get_vets(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: Optional[str] = ""):
+    # get all vets
+    vets = db.query(models.Vet).filter(
+        or_(
+            models.Vet.name.ilike(f"%{search}%"),
+            models.Vet.address.ilike(f"%{search}%"),
+            models.Vet.phone.ilike(f"%{search}%"),
+            models.Vet.email.ilike(f"%{search}%"),
+            models.Vet.clinic_name.ilike(f"%{search}%"),
         )
+    )
     return paginate(db, vets)
 
 @router.get("/{id}", response_model=ResponseVet)

@@ -1,14 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Response, File, UploadFile
-from app.schemes.dog import ResponseDog, Dog
+from app.schemes.dog import ResponseDog, Dog, AdminDog
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from app.database.config import get_db
 from app.utils import oauth2
-from app.utils.gcs import GCStorage
 from sqlalchemy import or_
 from fastapi_pagination.ext.sqlalchemy import paginate
-from app import models
 from fastapi_pagination import Page
+from app import models
 from datetime import datetime
 from app.utils.roles import RoleChecker, Role
 
@@ -39,10 +38,23 @@ async def admin_get_dog_by_id(id: int, db: Session = Depends(get_db), current_us
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Dog doesnt exist")
     return dog
 
+#Create dog (admin)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=ResponseDog)
+async def admin_create_dog(dog: AdminDog, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+    #lowercase the all
+    dog.name = dog.name.lower()
+    dog.breed = dog.breed.lower()
+    dog.gender = dog.gender.lower()
+
+    new_dog = models.Dog(**dog.model_dump())
+    db.add(new_dog)
+    db.commit()
+    db.refresh(new_dog)
+    return new_dog
 
 #Update dog (admin)
 @router.put("/{id}", status_code=status.HTTP_202_ACCEPTED, response_model=ResponseDog, dependencies=[Depends(only_admin_allowed)])
-async def admin_update_dog(id: int, dog: Dog, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+async def admin_update_dog(id: int, dog: AdminDog, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     dog_update = db.query(models.Dog).filter(models.Dog.id == id)
 
     if not dog_update.first():

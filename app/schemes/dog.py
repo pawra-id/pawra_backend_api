@@ -24,3 +24,17 @@ class ResponseDog(Dog):
 
     class Config:
         from_attributes = True
+
+class AdminDog(Dog):
+    owner_id: int
+
+    class Config:
+        from_attributes = True
+
+class DogAnalysis(Dog):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True

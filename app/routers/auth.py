@@ -48,19 +48,29 @@ async def login(user_cred: OAuth2PasswordRequestForm = Depends(), db: Session = 
 
     return {"access_token": access_token, "expires_in": expire, "token_type": "bearer", "user": logged_in_user}
 
+
+
+
+
+
+
 @router.post('/token/refresh', response_model=Token)
 def refresh_token(token: RefreshToken, db: Session = Depends(get_db)):
-    # Verify the old token
+    #Exception (without authentication)
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
     )
-
+    #Veryfy token by decoding and getting user id
     tok = verify_access_token(token.access_token, credentials_exception)
     
-    new_token = create_token(data={"user_id": tok.id})  # replace "user_id" with the actual user id
+    #if no error, create new token (content : user id)
+    new_token = create_token(data={"user_id": tok.id})
+    #get logged in user 
     logged_in_user = db.query(models.User).filter(models.User.id == tok.id).first()
+    #set expiration time
     expire = str(datetime.now(ZoneInfo("Asia/Jakarta")) + timedelta(minutes=s.access_token_expire_minutes))
 
+    #return
     return {"access_token": new_token, "expires_in": expire, "token_type": "bearer", "user": logged_in_user}
 

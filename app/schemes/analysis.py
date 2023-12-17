@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import List
 from app.schemes.activity import ActivityForAnalysis
 from app.schemes.action import ResponseAction
+from app.schemes.dog import DogAnalysis
 
 class Analysis(BaseModel):
     dog_id: int
@@ -18,6 +19,7 @@ class ResponseAnalysis(Analysis):
     id: int
     created_at: datetime
     updated_at: datetime
+    dog: DogAnalysis
     activities: List[ActivityForAnalysis]
     actions: List[ResponseAction]
 
