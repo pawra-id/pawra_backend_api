@@ -17,6 +17,18 @@ router = APIRouter(
     tags=["Analysis"]
 )
 
+#Get all shared analysis
+@router.get("/shared", response_model=Page[ResponseAnalysis])
+async def get_my_shared_analysis(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: Optional[str] = ''):
+    analysis = db.query(models.Analysis).join(models.Dog).filter(
+        or_(
+            models.Analysis.description.contains(search.lower()),
+            models.Analysis.prediction.contains(search.lower())
+        ),
+        models.Analysis.is_shared == True
+        )
+    return paginate(db, analysis)
+
 #get my analysis
 @router.get("/", response_model=Page[ResponseAnalysis])
 async def get_my_analysis(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: Optional[str] = ''):
@@ -144,18 +156,6 @@ async def unshare_analysis(id: int, db: Session = Depends(get_db), current_user:
     db.commit()
 
     return {"message": "Analysis unshared"}
-
-#Get all shared analysis
-@router.get("/shared", response_model=Page[ResponseAnalysis])
-async def get_my_shared_analysis(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: Optional[str] = ''):
-    analysis = db.query(models.Analysis).join(models.Dog).filter(
-        or_(
-            models.Analysis.description.contains(search.lower()),
-            models.Analysis.prediction.contains(search.lower())
-        ),
-        models.Analysis.is_shared == True
-        )
-    return paginate(db, analysis)
 
 #get analysis by my dog id (current user)
 @router.get("/dog/{id}", response_model=Page[ResponseAnalysis])
