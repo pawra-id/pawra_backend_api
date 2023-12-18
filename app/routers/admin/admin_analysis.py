@@ -25,8 +25,8 @@ router = APIRouter(
 async def admin_get_all_analysis(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: Optional[str] = ''):
     analysis = db.query(models.Analysis).join(models.Dog).filter(
         or_(
-            models.Analysis.description.contains(search.lower()),
-            models.Analysis.prediction.contains(search.lower())
+            models.Analysis.description.ilike(f"%{search}%"),
+            models.Analysis.prediction.ilike(f"%{search}%")
         ),
         )
     return paginate(db, analysis)

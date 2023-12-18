@@ -30,9 +30,9 @@ async def admin_get_all_users(db: Session = Depends(get_db), current_user: int =
     #get all users
     users = db.query(models.User).filter(
         or_(
-            models.User.username.contains(search.lower()),
-            models.User.email.contains(search.lower()),
-            models.User.address.contains(search.lower()),
+            models.User.username.ilike(f"%{search}%"),
+            models.User.email.ilike(f"%{search}%"),
+            models.User.address.ilike(f"%{search}%"),
         )
     )
 
@@ -46,6 +46,14 @@ async def create_user(user: CreateUser, db: Session = Depends(get_db)):
 
     #get data from user schema, dump it to model, then pass it to db
     new_user = models.User(**user.model_dump())
+
+    #validate if user already exist
+    if db.query(models.User).filter(models.User.email == new_user.email).first():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+    
+    #validate if username already exist
+    if db.query(models.User).filter(models.User.username == new_user.username).first():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already registered")
 
     #add to db
     db.add(new_user)

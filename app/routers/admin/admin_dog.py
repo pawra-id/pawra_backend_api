@@ -24,8 +24,8 @@ async def admin_get_all_dogs(db: Session = Depends(get_db), current_user: int = 
     #only can see their own dogs
     dogs = db.query(models.Dog).filter(
         or_(
-            models.Dog.name.contains(search.lower()),
-            models.Dog.breed.contains(search.lower()),
+            models.Dog.name.ilike(f"%{search}%"),
+            models.Dog.breed.ilike(f"%{search}%"),
         )
         )
     return paginate(db, dogs)

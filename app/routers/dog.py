@@ -22,8 +22,8 @@ async def get_my_dogs(db: Session = Depends(get_db), current_user: int = Depends
     #only can see their own dogs
     dogs = db.query(models.Dog).filter(
         or_(
-            models.Dog.name.contains(search.lower()),
-            models.Dog.breed.contains(search.lower()),
+            models.Dog.name.ilike(f"%{search}%"),
+            models.Dog.breed.ilike(f"%{search}%"),
         ), 
         models.Dog.owner_id == current_user.id)
     return paginate(db, dogs)

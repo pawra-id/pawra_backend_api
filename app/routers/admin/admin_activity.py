@@ -23,7 +23,7 @@ only_admin_allowed = RoleChecker([Role.ADMIN.value])
 async def admin_get_all_activities(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: str = ''):
     #only show my activities from my dogs
     activities = db.query(models.Activity).join(models.Dog).filter(
-        models.Activity.description.contains(search.lower()),
+        models.Activity.description.ilike(f"%{search}%"),
         )
     return paginate(db, activities)
 

@@ -14,7 +14,9 @@ router = APIRouter(
 
 @router.get('/', response_model=List[ResponseTag])
 async def search_tags(search: str = "", db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
-    tags = db.query(models.Tag).filter(models.Tag.name.contains(search.lower())).all()
+    tags = db.query(models.Tag).filter(
+        models.Tag.name.ilike(f"%{search}%")
+        ).all()
     return tags
 
 @router.get('/most_used', response_model=List[ResponseTag])

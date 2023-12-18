@@ -20,7 +20,7 @@ router = APIRouter(
 # Get all tags
 @router.get('/', response_model=Page[ResponseTag], dependencies=[Depends(only_admin_allowed)])
 async def admin_get_all_tags(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: Optional[str] = ""):
-    tags = db.query(models.Tag).filter(models.Tag.name.contains(search.lower()))
+    tags = db.query(models.Tag).filter(models.Tag.name.ilike(f"%{search}%"))
     return paginate(db, tags)
 
 # Create new tag

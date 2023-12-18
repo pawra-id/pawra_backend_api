@@ -21,8 +21,8 @@ router = APIRouter(
 async def get_blogs(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: Optional[str] = ""):
     blogs = db.query(models.Blog).filter(
         or_(
-            models.Blog.title.contains(search.lower()),
-            models.Blog.content.contains(search.lower()),
+            models.Blog.title.ilike(f"%{search}%"),
+            models.Blog.content.ilike(f"%{search}%"),
         ))
     return paginate(db, blogs)
 

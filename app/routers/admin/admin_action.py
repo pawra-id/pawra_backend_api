@@ -19,7 +19,9 @@ router = APIRouter(
 
 @router.get('/', response_model=Page[ResponseAction], dependencies=[Depends(only_admin_allowed)])
 async def admin_get_actions(db: Session = Depends(get_db), search: Optional[str] = ''):
-    actions = db.query(models.Actions).filter(models.Actions.action.contains(search.lower()))
+    actions = db.query(models.Actions).filter(
+        models.Actions.action.ilike(f"%{search}%")
+        )
     return paginate(db, actions)
 
 #get a single action (admin)

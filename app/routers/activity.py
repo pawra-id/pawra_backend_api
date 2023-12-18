@@ -20,7 +20,7 @@ router = APIRouter(
 async def get_my_dogs_activities(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: str = ''):
     #only show my activities from my dogs
     activities = db.query(models.Activity).join(models.Dog).filter(
-        models.Activity.description.contains(search.lower()),
+        models.Activity.description.ilike(f"%{search}%"),
         models.Dog.owner_id == current_user.id
         )
     return paginate(db, activities)
