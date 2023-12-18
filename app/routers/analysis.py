@@ -19,7 +19,7 @@ router = APIRouter(
 
 #Get all shared analysis
 @router.get("/shared", response_model=Page[ResponseAnalysis])
-async def get_my_shared_analysis(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: Optional[str] = ''):
+async def get_all_shared_analysis(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: Optional[str] = ''):
     analysis = db.query(models.Analysis).join(models.Dog).filter(
         or_(
             models.Analysis.description.contains(search.lower()),
@@ -28,6 +28,17 @@ async def get_my_shared_analysis(db: Session = Depends(get_db), current_user: in
         models.Analysis.is_shared == True
         )
     return paginate(db, analysis)
+
+#Get a shared analysis by id
+@router.get("/shared/{id}", response_model=ResponseAnalysis)
+async def get_shared_analysis(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+    analysis = db.query(models.Analysis).join(models.Dog).filter(
+        models.Analysis.id == id, 
+        models.Analysis.is_shared == True).first()
+    
+    if not analysis:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Analysis not found")
+    return analysis
 
 #get my analysis
 @router.get("/", response_model=Page[ResponseAnalysis])
