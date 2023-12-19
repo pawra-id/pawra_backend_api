@@ -60,11 +60,22 @@ async def admin_create_analysis(analysis: CreateAnalysis, days: int = 7, db: Ses
 
     #mock prediction
     ml_prediction = response.content.decode('utf-8')
-    ml_description = "This is a description"
+    ml_description = ""
 
     #get 5 random actions from db
     actions = db.query(models.Actions).order_by(func.random()).limit(5).all()
 
+    #if prediction < 0.3, dog is healthy
+    if float(ml_prediction) < 0.3:
+        ml_description = "Your dog is currently healthy. Try to keep it that way by keeping up the good work!. Check the recommended actions below!"
+    #else if prediction > 0.3 and < 0.7, dog is concerning
+    elif float(ml_prediction) < 0.7:
+        ml_description = "Your dog mental health is currently concerning. Try to do more activities with your dog. Check the recommended actions below!"
+    #else if prediction > 0.7, dog is unhealthy
+    else:
+        ml_description = "Your dog mental health is currently unhealthy. Be more careful about your dog emotional state. Check the recommended actions below!"
+
+    
     #create analysis
     new_analysis = models.Analysis(
         prediction = ml_prediction,
