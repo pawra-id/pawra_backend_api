@@ -6,11 +6,9 @@ from app.database.config import get_db
 from app.utils import oauth2
 from app import models
 from app.utils.gcs import GCStorage
-from fastapi_pagination import Page
-from sqlalchemy import or_
-from fastapi_pagination.ext.sqlalchemy import paginate
 from datetime import datetime
 from app.utils.roles import RoleChecker, Role
+import pytz
 
 only_admin_allowed = RoleChecker([Role.ADMIN.value])
 
@@ -22,7 +20,8 @@ router = APIRouter(
 #Create blog
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=ResponseBlog, dependencies=[Depends(only_admin_allowed)])
 async def create_blog(blog: Blog, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
-    new_blog = models.Blog(author_id=current_user.id, **blog.model_dump())
+    timezone = pytz.timezone('Asia/Jakarta')
+    new_blog = models.Blog(author_id=current_user.id, **blog.model_dump(), created_at=datetime.now(timezone), updated_at=datetime.now(timezone))
     db.add(new_blog)
     db.commit()
     db.refresh(new_blog)
@@ -38,7 +37,7 @@ async def update_blog(id: int, blog: Blog, db: Session = Depends(get_db), curren
     
     blog_update.update(blog.model_dump())
     blog_update.update({
-        'updated_at': datetime.now()
+        'updated_at': datetime.now(pytz.timezone('Asia/Jakarta'))               
     })
     db.commit()
     db.refresh(blog_update.first())

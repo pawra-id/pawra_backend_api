@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 from fastapi_pagination import Page
 import requests
 from app.utils.roles import RoleChecker, Role
+import pytz
 
 only_admin_allowed = RoleChecker([Role.ADMIN.value])
 
@@ -34,6 +35,7 @@ async def admin_get_all_analysis(db: Session = Depends(get_db), current_user: in
 #create analysis (admin)
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=ResponseAnalysis)
 async def admin_create_analysis(analysis: CreateAnalysis, days: int = 7, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+    timezone = pytz.timezone('Asia/Jakarta')
     dog = db.query(models.Dog).filter(models.Dog.id == analysis.dog_id).first()
     #Check if dog exist
     if not dog:
@@ -80,7 +82,9 @@ async def admin_create_analysis(analysis: CreateAnalysis, days: int = 7, db: Ses
     new_analysis = models.Analysis(
         prediction = ml_prediction,
         description = ml_description,
-        dog_id = analysis.dog_id
+        dog_id = analysis.dog_id,
+        created_at = datetime.now(timezone),
+        updated_at = datetime.now(timezone)
     )
     db.add(new_analysis)
     db.commit()

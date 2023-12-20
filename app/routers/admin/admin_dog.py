@@ -10,6 +10,7 @@ from fastapi_pagination import Page
 from app import models
 from datetime import datetime
 from app.utils.roles import RoleChecker, Role
+import pytz
 
 only_admin_allowed = RoleChecker([Role.ADMIN.value])
 
@@ -41,12 +42,13 @@ async def admin_get_dog_by_id(id: int, db: Session = Depends(get_db), current_us
 #Create dog (admin)
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=ResponseDog)
 async def admin_create_dog(dog: AdminDog, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+    timezone = pytz.timezone('Asia/Jakarta')
     #lowercase the all
     dog.name = dog.name.lower()
     dog.breed = dog.breed.lower()
     dog.gender = dog.gender.lower()
 
-    new_dog = models.Dog(**dog.model_dump())
+    new_dog = models.Dog(**dog.model_dump(), created_at=datetime.now(timezone), updated_at=datetime.now(timezone))
     db.add(new_dog)
     db.commit()
     db.refresh(new_dog)
@@ -55,6 +57,7 @@ async def admin_create_dog(dog: AdminDog, db: Session = Depends(get_db), current
 #Update dog (admin)
 @router.put("/{id}", status_code=status.HTTP_202_ACCEPTED, response_model=ResponseDog, dependencies=[Depends(only_admin_allowed)])
 async def admin_update_dog(id: int, dog: AdminDog, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+    timezone = pytz.timezone('Asia/Jakarta')
     dog_update = db.query(models.Dog).filter(models.Dog.id == id)
 
     if not dog_update.first():
@@ -62,7 +65,7 @@ async def admin_update_dog(id: int, dog: AdminDog, db: Session = Depends(get_db)
     
     dog_update.update(dog.model_dump())
     dog_update.update({
-        'updated_at': datetime.now()
+        'updated_at': datetime.now(timezone)
     })
     db.commit()
     db.refresh(dog_update.first())

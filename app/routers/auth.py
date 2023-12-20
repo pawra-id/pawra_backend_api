@@ -9,7 +9,7 @@ from app import models
 from app.config import settings as s
 from app.schemes.token import Token, RefreshToken
 from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
+import pytz
 
 router = APIRouter(
     tags=["Authentication"],
@@ -17,6 +17,7 @@ router = APIRouter(
 
 @router.post("/token", response_model=Token)
 async def login(user_cred: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    timezone = pytz.timezone('Asia/Jakarta')
     #OAuth2PasswordRequestForm only has 2 keys: username and password
     #in this case we pass email into the username key
     user = db.query(models.User).\
@@ -38,7 +39,7 @@ async def login(user_cred: OAuth2PasswordRequestForm = Depends(), db: Session = 
     #create access token
     access_token = create_token(data={"user_id": user.id})
     #set expiration time
-    expire = str(datetime.now(ZoneInfo("Asia/Jakarta")) + timedelta(minutes=s.access_token_expire_minutes))
+    expire = str(datetime.now(timezone) + timedelta(minutes=s.access_token_expire_minutes))
 
     #get logged in user
     logged_in_user = db.query(models.User).filter(models.User.id == user.id).first()
@@ -56,6 +57,7 @@ async def login(user_cred: OAuth2PasswordRequestForm = Depends(), db: Session = 
 
 @router.post('/token/refresh', response_model=Token)
 def refresh_token(token: RefreshToken, db: Session = Depends(get_db)):
+    timezone = pytz.timezone('Asia/Jakarta')
     #Exception (without authentication)
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -69,7 +71,7 @@ def refresh_token(token: RefreshToken, db: Session = Depends(get_db)):
     #get logged in user 
     logged_in_user = db.query(models.User).filter(models.User.id == tok.id).first()
     #set expiration time
-    expire = str(datetime.now(ZoneInfo("Asia/Jakarta")) + timedelta(minutes=s.access_token_expire_minutes))
+    expire = str(datetime.now(timezone) + timedelta(minutes=s.access_token_expire_minutes))
 
     #return
     return {"access_token": new_token, "expires_in": expire, "token_type": "bearer", "user": logged_in_user}

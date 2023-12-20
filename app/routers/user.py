@@ -12,6 +12,7 @@ from fastapi_pagination import Page
 from sqlalchemy import or_
 from fastapi_pagination.ext.sqlalchemy import paginate
 from app.utils.roles import RoleChecker, Role
+import pytz
 
 router = APIRouter(
     tags=["Users"],
@@ -41,11 +42,13 @@ async def admin_get_all_users(db: Session = Depends(get_db), current_user: int =
 #Create user
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=ResponseUser)
 async def create_user(user: CreateUser, db: Session = Depends(get_db)):
+    timezone = pytz.timezone('Asia/Jakarta')
+
     #hasing password
     user.password = hash(user.password)
 
     #get data from user schema, dump it to model, then pass it to db
-    new_user = models.User(**user.model_dump())
+    new_user = models.User(**user.model_dump(), created_at=datetime.now(timezone), updated_at=datetime.now(timezone))
 
     #validate if user already exist
     if db.query(models.User).filter(models.User.email == new_user.email).first():
@@ -76,6 +79,8 @@ async def get_user(id: int, db: Session = Depends(get_db), current_user: int = D
 #Update user by id
 @router.put('/{id}', response_model=ResponseUser)
 async def update_user(id: int, user: User, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+    timezone = pytz.timezone('Asia/Jakarta')
+
     #get user by id
     user_update = db.query(models.User).filter(models.User.id == id)
     #check if user exists
@@ -86,7 +91,7 @@ async def update_user(id: int, user: User, db: Session = Depends(get_db), curren
     user_update.update(user.model_dump())
 
     user_update.update({
-        'updated_at': datetime.now()
+        'updated_at': datetime.now(timezone)
     })
     db.commit()
     db.refresh(user_update.first())

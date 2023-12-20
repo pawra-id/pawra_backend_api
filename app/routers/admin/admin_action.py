@@ -9,6 +9,7 @@ from typing import Optional
 from app.utils.roles import RoleChecker, Role
 from fastapi_pagination.ext.sqlalchemy import paginate
 from fastapi_pagination import Page
+import pytz
 
 only_admin_allowed = RoleChecker([Role.ADMIN.value])
 
@@ -35,9 +36,12 @@ async def admin_get_action(id: int, db: Session = Depends(get_db)):
 #create action (admin)
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=ResponseAction, dependencies=[Depends(only_admin_allowed)])
 async def admin_create_action(action: Action, db: Session = Depends(get_db)):
+    timezone = pytz.timezone('Asia/Jakarta')
     new_action = models.Actions(
         action=action.action,
         description=action.description,
+        created_at=datetime.now(timezone),
+        updated_at=datetime.now(timezone)
     )
     db.add(new_action)
     db.commit()
@@ -47,13 +51,14 @@ async def admin_create_action(action: Action, db: Session = Depends(get_db)):
 #update action (admin)
 @router.put('/{id}', response_model=ResponseAction, dependencies=[Depends(only_admin_allowed)])
 async def admin_update_action(id: int, action: Action, db: Session = Depends(get_db)):
+    timezone = pytz.timezone('Asia/Jakarta')
     action_query = db.query(models.Actions).filter(models.Actions.id == id)
     if not action_query.first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Action with id {id} not found')
     action_query.update({
         'action': action.action,
         'description': action.description,
-        'updated_at': datetime.now()
+        'updated_at': datetime.now(timezone)
     })
     db.commit()
     #return updated action

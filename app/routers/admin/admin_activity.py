@@ -9,6 +9,7 @@ from datetime import datetime
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 from app.utils.roles import RoleChecker, Role
+import pytz
 
 router = APIRouter(
     prefix="/admin/activities",
@@ -40,6 +41,7 @@ async def admin_get_activity_by_id(id: int, db: Session = Depends(get_db), curre
 #Create activity (admin only)
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=ResponseActivity)
 async def admin_create_activity(activity: CreateActivity, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+    timezone = pytz.timezone('Asia/Jakarta')
     dog = db.query(models.Dog).filter(models.Dog.id == activity.dog_id).first()
     #Check if dog exist
     if not dog:
@@ -48,7 +50,9 @@ async def admin_create_activity(activity: CreateActivity, db: Session = Depends(
     #create activity
     new_activity = models.Activity(
         description = activity.description,
-        dog_id = activity.dog_id
+        dog_id = activity.dog_id,
+        created_at = datetime.now(timezone),
+        updated_at = datetime.now(timezone)
     )
     db.add(new_activity)
     db.commit()
@@ -61,7 +65,7 @@ async def admin_create_activity(activity: CreateActivity, db: Session = Depends(
         tag_check = db.query(models.Tag).filter(models.Tag.name == tag.name).first()
         if tag_check is None:
             #if no, create new tag with lowercase name
-            new_tag = models.Tag(name=tag.name.lower())
+            new_tag = models.Tag(name=tag.name.lower(), created_at=datetime.now(timezone))
             db.add(new_tag)
             #add tag to activity
             created_activity.tags.append(new_tag)
@@ -78,6 +82,7 @@ async def admin_create_activity(activity: CreateActivity, db: Session = Depends(
 #Update activity (admin only)
 @router.put('/{id}', status_code=status.HTTP_202_ACCEPTED, response_model=ResponseActivity, dependencies=[Depends(only_admin_allowed)])
 async def admin_update_activity(id: int, activity: CreateActivity, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+    timezone = pytz.timezone('Asia/Jakarta')
     #get activity by id, dog, and owner
     activity_update = db.query(models.Activity).join(models.Dog).filter(
         models.Activity.id == id
@@ -92,7 +97,7 @@ async def admin_update_activity(id: int, activity: CreateActivity, db: Session =
         update({
             models.Activity.description: activity.description,
             models.Activity.dog_id: activity.dog_id,
-            models.Activity.updated_at: datetime.now()
+            models.Activity.updated_at: datetime.now(timezone)
         })
     db.commit()
     db.refresh(activity_update.first())
@@ -108,7 +113,7 @@ async def admin_update_activity(id: int, activity: CreateActivity, db: Session =
         tag_check = db.query(models.Tag).filter(models.Tag.name == tag.name).first()
         if tag_check is None:
             #if no, create new tag
-            new_tag = models.Tag(name=tag.name)
+            new_tag = models.Tag(name=tag.name, created_at=datetime.now(timezone))
             db.add(new_tag)
             #add tag to activity
             updated_activity.tags.append(new_tag)

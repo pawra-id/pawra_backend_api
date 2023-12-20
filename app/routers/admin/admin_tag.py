@@ -9,6 +9,8 @@ from sqlalchemy import func
 from app.utils.roles import RoleChecker, Role
 from fastapi_pagination.ext.sqlalchemy import paginate
 from fastapi_pagination import Page
+import pytz
+from datetime import datetime
 
 only_admin_allowed = RoleChecker([Role.ADMIN.value])
 
@@ -26,7 +28,8 @@ async def admin_get_all_tags(db: Session = Depends(get_db), current_user: int = 
 # Create new tag
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=ResponseTag, dependencies=[Depends(only_admin_allowed)])
 async def admin_create_tag(tag: Tag, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
-    new_tag = models.Tag(name=tag.name.lower())
+    timezone = pytz.timezone('Asia/Jakarta')
+    new_tag = models.Tag(name=tag.name.lower(), created_at=datetime.now(timezone))
     db.add(new_tag)
     db.commit()
     db.refresh(new_tag)

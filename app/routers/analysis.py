@@ -11,6 +11,7 @@ from app import models
 from datetime import datetime, timedelta
 from fastapi_pagination import Page
 import requests
+import pytz
 
 router = APIRouter(
     prefix="/analysis",
@@ -67,6 +68,8 @@ async def get_analysis(id: int, db: Session = Depends(get_db), current_user: int
 #create analysis
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=ResponseAnalysis)
 async def create_analysis(analysis: CreateAnalysis, days: int = 7, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+    timezone = pytz.timezone('Asia/Jakarta')
+
     dog = db.query(models.Dog).filter(models.Dog.id == analysis.dog_id).first()
     #Check if dog exist
     if not dog:
@@ -115,7 +118,9 @@ async def create_analysis(analysis: CreateAnalysis, days: int = 7, db: Session =
     new_analysis = models.Analysis(
         prediction = ml_prediction,
         description = ml_description,
-        dog_id = analysis.dog_id
+        dog_id = analysis.dog_id,
+        created_at = datetime.now(timezone),
+        updated_at = datetime.now(timezone)
     )
     db.add(new_analysis)
     db.commit()
