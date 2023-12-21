@@ -20,7 +20,7 @@ def create_token(data: dict):
     to_encode = data.copy()
 
     #set expiration time
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     #add expiration time to data
     to_encode.update({"exp": expire})
     #encode data
@@ -33,6 +33,7 @@ def verify_access_token(token: str, credentials_exception):
     try:
         #decode token
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+
         #get user id from decoded token
         id: str = payload.get('user_id')
         #if id is None, raise exception

@@ -14,8 +14,16 @@ class CreateActivity(Activity):
 class ResponseActivity(Activity):
     id: int
     created_at: datetime
+    updated_at: datetime
     dog: ResponseDog
     tags: List[ResponseTag]
 
     class Config:
         from_attributes = True
+
+class ActivityForAnalysis(BaseModel):
+    id: int
+    description: str
+    created_at: datetime
+    updated_at: datetime
+    tags: List[Tag]

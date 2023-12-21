@@ -8,46 +8,44 @@ from app.utils import oauth2
 from datetime import datetime
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
+from app.utils.roles import RoleChecker, Role
 import pytz
 
 router = APIRouter(
-    prefix="/activities",
-    tags=['Activity']
+    prefix="/admin/activities",
+    tags=['Admin Activity']
 )
 
+only_admin_allowed = RoleChecker([Role.ADMIN.value])
 
-#Get all activities from only my dogs (current user)
-@router.get('/', response_model=Page[ResponseActivity])
-async def get_my_dogs_activities(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: str = ''):
+
+#Get all activities (admin only)
+@router.get('/', response_model=Page[ResponseActivity], dependencies=[Depends(only_admin_allowed)])
+async def admin_get_all_activities(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: str = ''):
     #only show my activities from my dogs
     activities = db.query(models.Activity).join(models.Dog).filter(
         models.Activity.description.ilike(f"%{search}%"),
-        models.Dog.owner_id == current_user.id
         )
     return paginate(db, activities)
 
-#Get activity by id (current user)
-@router.get('/{id}', response_model=ResponseActivity)
-async def get_activity(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+#Get activity by id (admin only)
+@router.get('/{id}', response_model=ResponseActivity, dependencies=[Depends(only_admin_allowed)])
+async def admin_get_activity_by_id(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     activity = db.query(models.Activity).join(models.Dog).filter(
-        models.Activity.id == id, 
-        models.Dog.owner_id == current_user.id).first()
+        models.Activity.id == id).first()
     
     if not activity:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Activity not found')
     return activity
 
-#Create activity
+#Create activity (admin only)
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=ResponseActivity)
-async def create_activity(activity: CreateActivity, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+async def admin_create_activity(activity: CreateActivity, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     timezone = pytz.timezone('Asia/Jakarta')
     dog = db.query(models.Dog).filter(models.Dog.id == activity.dog_id).first()
     #Check if dog exist
     if not dog:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Dog with id {activity.dog_id} not found')
-    #check if dog belongs to user
-    if dog.owner_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Unauthorized')
 
     #create activity
     new_activity = models.Activity(
@@ -81,14 +79,14 @@ async def create_activity(activity: CreateActivity, db: Session = Depends(get_db
 
     return created_activity
 
-#Update activity (current user)
-@router.put('/{id}', status_code=status.HTTP_202_ACCEPTED, response_model=ResponseActivity)
-async def update_activity(id: int, activity: CreateActivity, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+#Update activity (admin only)
+@router.put('/{id}', status_code=status.HTTP_202_ACCEPTED, response_model=ResponseActivity, dependencies=[Depends(only_admin_allowed)])
+async def admin_update_activity(id: int, activity: CreateActivity, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     timezone = pytz.timezone('Asia/Jakarta')
     #get activity by id, dog, and owner
     activity_update = db.query(models.Activity).join(models.Dog).filter(
-        models.Activity.id == id, 
-        models.Dog.owner_id == current_user.id)
+        models.Activity.id == id
+        )
     #check if activity exists
     if not activity_update.first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Activity not found')
@@ -115,7 +113,7 @@ async def update_activity(id: int, activity: CreateActivity, db: Session = Depen
         tag_check = db.query(models.Tag).filter(models.Tag.name == tag.name).first()
         if tag_check is None:
             #if no, create new tag
-            new_tag = models.Tag(name=tag.name.lower(), created_at=datetime.now(timezone))
+            new_tag = models.Tag(name=tag.name, created_at=datetime.now(timezone))
             db.add(new_tag)
             #add tag to activity
             updated_activity.tags.append(new_tag)
@@ -126,13 +124,12 @@ async def update_activity(id: int, activity: CreateActivity, db: Session = Depen
             
     return updated_activity
 
-#Delete activity (current user)
-@router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT)
-async def delete_activity(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+#Delete activity (admin only)
+@router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(only_admin_allowed)])
+async def admin_delete_activity(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     #get activity by id, dog, and owner
     activity_delete = db.query(models.Activity).join(models.Dog).filter(
-        models.Activity.id == id, 
-        models.Dog.owner_id == current_user.id)
+        models.Activity.id == id)
     #check if activity exists
     if not activity_delete.first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Activity not found')
@@ -144,17 +141,14 @@ async def delete_activity(id: int, db: Session = Depends(get_db), current_user: 
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-#Get all activities by dog id (current user)
-@router.get('/dog/{id}', response_model=Page[ResponseActivity])
-async def get_activity_by_dog(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: str = ''):
+#Get all activities by dog id (admin only)
+@router.get('/dog/{id}', response_model=Page[ResponseActivity], dependencies=[Depends(only_admin_allowed)])
+async def admin_get_activity_by_dog(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), search: str = ''):
     #check if dog exists
     dog = db.query(models.Dog).filter(models.Dog.id == id).first()
     if not dog:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Dog with id {id} not found')
-    #check if dog belongs to user
-    if dog.owner_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Unauthorized')
-
+    
     activities = db.query(models.Activity).filter(
         models.Activity.dog_id == id,
         models.Activity.description.contains(search.lower())
